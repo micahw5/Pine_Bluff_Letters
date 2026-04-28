@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pine Bluff Code Enforcement – Notice Generator</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Arial, sans-serif; background: #f4f5f7; color: #1a1a2e; font-size: 15px; }
+  header { background: #1a3a5c; color: #fff; padding: 16px 28px; display: flex; align-items: center; gap: 14px; box-shadow: 0 2px 6px rgba(0,0,0,0.25); }
+  header .seal { width: 48px; height: 48px; background: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 22px; }
+  header h1 { font-size: 18px; font-weight: 700; line-height: 1.2; }
+  header p  { font-size: 12px; opacity: 0.8; margin-top: 2px; }
+  .container { max-width: 860px; margin: 28px auto; padding: 0 16px 60px; }
+  .card { background: #fff; border-radius: 10px; box-shadow: 0 1px 4px rgba(0,0,0,0.1); margin-bottom: 22px; overflow: hidden; }
+  .card-header { background: #1a3a5c; color: #fff; padding: 12px 20px; font-size: 14px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+  .card-body { padding: 20px; }
+  .step-badge { background: #e8f0fe; color: #1a3a5c; border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; flex-shrink: 0; }
+  label { display: block; font-size: 13px; font-weight: 600; color: #444; margin-bottom: 5px; }
+  input, textarea { width: 100%; padding: 9px 12px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; font-family: Arial, sans-serif; background: #fafafa; transition: border 0.15s; }
+  input:focus, textarea:focus { outline: none; border-color: #1a3a5c; background: #fff; }
+  textarea { resize: vertical; min-height: 70px; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+  .form-row.three { grid-template-columns: 1fr 1fr 1fr; }
+  .form-group { margin-bottom: 14px; }
+  .violation-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .vcard { border: 2px solid #e0e0e0; border-radius: 8px; padding: 12px 14px; cursor: pointer; transition: all 0.15s; position: relative; }
+  .vcard:hover { border-color: #1a3a5c; background: #f0f4ff; }
+  .vcard.selected { border-color: #1a3a5c; background: #e8f0fe; }
+  .vcard input[type=checkbox] { position: absolute; top: 12px; right: 12px; width: 18px; height: 18px; cursor: pointer; accent-color: #1a3a5c; }
+  .vcard .vl { font-weight: 700; font-size: 13px; padding-right: 24px; }
+  .vcard .vc { margin-top: 5px; display: flex; flex-wrap: wrap; gap: 4px; }
+  .vcard .vd { font-size: 11px; color: #666; margin-top: 5px; line-height: 1.4; }
+  .badge { display: inline-block; padding: 2px 7px; border-radius: 4px; font-size: 11px; font-weight: 600; }
+  .bi { background: #dbeafe; color: #1e40af; }
+  .bo { background: #dcfce7; color: #166534; }
+  .btn { display: inline-flex; align-items: center; gap: 7px; padding: 10px 20px; border-radius: 7px; border: none; font-size: 14px; font-weight: 700; cursor: pointer; transition: background 0.15s; }
+  .btn-primary { background: #1a3a5c; color: #fff; }
+  .btn-primary:hover { background: #254e7a; }
+  .btn-secondary { background: #e5e7eb; color: #333; }
+  .btn-secondary:hover { background: #d1d5db; }
+  .btn-success { background: #166534; color: #fff; font-size: 15px; padding: 13px 28px; width: 100%; justify-content: center; }
+  .btn-success:hover { background: #14532d; }
+  .btn-success:disabled { background: #9ca3af; cursor: not-allowed; }
+  .btn-sm { padding: 6px 14px; font-size: 12px; }
+  .toggle-tabs { display: flex; border: 1px solid #ccc; border-radius: 7px; overflow: hidden; margin-bottom: 16px; }
+  .toggle-tabs button { flex: 1; padding: 9px; border: none; background: #f3f4f6; font-size: 13px; cursor: pointer; font-weight: 600; color: #555; transition: background 0.12s; }
+  .toggle-tabs button.active { background: #1a3a5c; color: #fff; }
+  .sb { padding: 10px 14px; border-radius: 7px; font-size: 13px; margin-bottom: 10px; }
+  .si { background: #eff6ff; color: #1e40af; border: 1px solid #bfdbfe; }
+  .ss { background: #f0fdf4; color: #166634; border: 1px solid #bbf7d0; }
+  .se { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
+  .sw { background: #fffbeb; color: #92400e; border: 1px solid #fde68a; }
+  .report-list { max-height: 360px; overflow-y: auto; margin-top: 8px; }
+  .rrow { background: #f9fafb; border: 1px solid #e0e0e0; border-radius: 8px; padding: 11px 14px; margin-bottom: 7px; cursor: pointer; transition: background 0.12s; display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 12px; }
+  .rrow:hover { background: #e8f0fe; border-color: #93c5fd; }
+  .rrow.active { background: #dbeafe; border-color: #1a3a5c; border-width: 2px; }
+  .rrow .rid { font-size: 11px; font-weight: 700; color: #1a3a5c; background: #e8f0fe; padding: 3px 8px; border-radius: 4px; white-space: nowrap; }
+  .rrow .rtitle { font-weight: 600; font-size: 13px; }
+  .rrow .rsub { font-size: 11px; color: #666; margin-top: 2px; }
+  .rrow .rdate { font-size: 11px; color: #888; white-space: nowrap; text-align: right; }
+  .pop { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 14px 16px; margin-top: 14px; }
+  .pop h4 { font-size: 13px; font-weight: 700; color: #166634; margin-bottom: 10px; }
+  .fgrid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+  .fi .fl { font-size: 11px; color: #555; margin-bottom: 2px; }
+  .fi .fv { font-size: 12px; font-weight: 700; color: #1a1a2e; }
+  .search-row { display: flex; gap: 8px; margin-bottom: 8px; }
+  .search-row input { flex: 1; }
+  .preview-box { background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; padding: 20px 24px; font-size: 13px; line-height: 1.8; white-space: pre-wrap; font-family: 'Times New Roman', serif; max-height: 400px; overflow-y: auto; color: #111; }
+  .divider { border: none; border-top: 1px solid #e5e7eb; margin: 18px 0; }
+  .spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid #bfdbfe; border-top-color: #1e40af; border-radius: 50%; animation: spin 0.7s linear infinite; vertical-align: middle; margin-right: 6px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @media (max-width: 600px) { .form-row, .form-row.three, .violation-grid, .fgrid { grid-template-columns: 1fr; } .rrow { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="seal">🏛️</div>
+  <div>
+    <h1>City of Pine Bluff – Code Enforcement</h1>
+    <p>Violation Notice Generator &nbsp;|&nbsp; Department of Inspections</p>
+  </div>
+</header>
+
+<div class="container">
+
+  <!-- STEP 1 -->
+  <div class="card">
+    <div class="card-header"><div class="step-badge">1</div> Property &amp; Officer Information</div>
+    <div class="card-body">
+
+      <div class="toggle-tabs">
+        <button id="tab-agol" class="active" onclick="switchTab('agol')">🗺️ Load from ArcGIS (Requests Layer)</button>
+        <button id="tab-manual" onclick="switchTab('manual')">✏️ Enter Manually</button>
+      </div>
+
+      <!-- ARCGIS PANEL -->
+      <div id="panel-agol">
+        <div id="agol-status"></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+          <span style="font-size:13px;color:#555;">Select an inspection report to auto-populate the notice.</span>
+          <div style="display:flex;gap:8px;">
+            <button class="btn btn-secondary btn-sm" onclick="runDiagnostic()">🔬 Diagnose</button>
+            <button class="btn btn-primary btn-sm" onclick="loadReports()">🔄 Refresh</button>
+          </div>
+        </div>
+        <div id="diag-out"></div>
+        <div class="search-row">
+          <input type="text" id="search-input" placeholder="Search by ID, type, officer, parcel, address..." oninput="filterReports()">
+        </div>
+        <div class="report-list" id="report-list">
+          <div class="sb si"><span class="spinner"></span>Loading reports from ArcGIS Online...</div>
+        </div>
+        <div class="pop" id="pop-preview" style="display:none">
+          <h4>✅ Report loaded — fields auto-populated:</h4>
+          <div class="fgrid">
+            <div class="fi"><div class="fl">Request ID (OBJECTID)</div><div class="fv" id="pp-rid">—</div></div>
+            <div class="fi"><div class="fl">Reference Number</div><div class="fv" id="pp-ref">—</div></div>
+            <div class="fi"><div class="fl">Date Submitted</div><div class="fv" id="pp-date">—</div></div>
+            <div class="fi"><div class="fl">Address</div><div class="fv" id="pp-addr">—</div></div>
+            <div class="fi"><div class="fl">Parcel Number</div><div class="fv" id="pp-parcel">—</div></div>
+            <div class="fi"><div class="fl">Legal</div><div class="fv" id="pp-lot">—</div></div>
+            <div class="fi"><div class="fl">Officer</div><div class="fv" id="pp-officer">—</div></div>
+            <div class="fi"><div class="fl">Owner (POC)</div><div class="fv" id="pp-owner">—</div></div>
+            <div class="fi"><div class="fl">Notes</div><div class="fv" id="pp-notes">—</div></div>
+          </div>
+          <div style="margin-top:14px;">
+            <label>Owner / Responsible Party Name * <span style="font-weight:400;color:#888;">(auto-filled — edit if needed)</span></label>
+            <input type="text" id="owner-agol" placeholder="e.g. WILLIAMS KIRRA">
+          </div>
+        </div>
+      </div>
+
+      <!-- MANUAL PANEL -->
+      <div id="panel-manual" style="display:none">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Owner / Responsible Party Name *</label>
+            <input type="text" id="m-owner" placeholder="WILLIAMS KIRRA">
+          </div>
+          <div class="form-group">
+            <label>Property Violation Location</label>
+            <input type="text" id="m-address" placeholder="5703 CHEATHAM ST">
+          </div>
+        </div>
+        <div class="form-row three">
+          <div class="form-group">
+            <label>Parcel</label>
+            <input type="text" id="m-parcel" placeholder="930-12386-000">
+          </div>
+          <div class="form-group">
+            <label>Reference Number</label>
+            <input type="text" id="m-ref" placeholder="2026-00000047">
+          </div>
+          <div class="form-group">
+            <label>Legal</label>
+            <input type="text" id="m-legal" placeholder="BLK 13, LOTS 14 &amp; 15">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Inspector Name *</label>
+            <input type="text" id="m-officer" placeholder="Rice, Mel">
+          </div>
+          <div class="form-group">
+            <label>Date *</label>
+            <input type="date" id="m-date">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Notes (optional)</label>
+          <textarea id="m-notes" placeholder="Additional observations..."></textarea>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- STEP 2 -->
+  <div class="card">
+    <div class="card-header"><div class="step-badge">2</div> Select Violation(s)</div>
+    <div class="card-body">
+      <p style="font-size:13px;color:#555;margin-bottom:14px;">Select all violations observed. IPMC and City Ordinance codes are applied automatically.</p>
+      <div class="violation-grid" id="vgrid"></div>
+    </div>
+  </div>
+
+  <!-- STEP 3 -->
+  <div class="card">
+    <div class="card-header"><div class="step-badge">3</div> Preview &amp; Generate Notice</div>
+    <div class="card-body">
+      <button class="btn btn-secondary" onclick="updatePreview()" style="margin-bottom:14px;">👁️ Preview Letter</button>
+      <div id="preview-area" style="display:none">
+        <div class="preview-box" id="preview-content"></div>
+        <hr class="divider">
+      </div>
+      <div id="gen-status"></div>
+      <button class="btn btn-success" onclick="generateDocument()" id="gen-btn">📄 Generate Word Document (.docx)</button>
+      <p style="font-size:11px;color:#888;margin-top:8px;text-align:center;">Document downloads automatically. Owner name is required.</p>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ── CONFIG ────────────────────────────────────────────────────────────────────
+var LAYER_URL = 'https://services5.arcgis.com/t2t1phUp5Bj3z8Lp/arcgis/rest/services/Requests_da4f32658a6549c1ac33550f361e607d/FeatureServer/0';
+
+var F = {
+  requestId : 'OBJECTID',
+  category  : 'reqcategory',
+  type      : 'reqtype',
+  details   : 'details',
+  notes     : 'notes',
+  date      : 'created_date',
+  parcel    : 'Parcel_Number',
+  lot       : 'Lot',
+  officer   : 'Officer_Name',
+  address   : 'locdesc',
+  owner     : 'pocfirstname',
+  refNumber : 'Account_Number',
+};
+
+// ── STATE ─────────────────────────────────────────────────────────────────────
+var allReports = [];
+var selectedReport = null;
+var activeTab = 'agol';
+
+// ── VIOLATIONS ────────────────────────────────────────────────────────────────
+var VIOLATIONS = [
+  {
+    id:'unsafe_structure', label:'Construction – Unsafe Structure', desc:'Burned down or structurally unstable building',
+    ipmc:[{code:'109.1'}], ordinances:[{sec:'Sec. 16-3'}],
+    ord_text:['SECTION 16-3. A BURNED-OUT STRUCTURE MEANS ANY RESIDENTIAL OR COMMERCIAL STRUCTURE WHICH, DUE TO FIRE OR ANY OTHER NATURAL OR HUMAN CAUSED CASUALTY, HAS THE INTERIOR THEREOF OPEN TO THE ELEMENTS, AND IS UNFIT FOR HUMAN HABITATION. IT IS UNLAWFUL FOR AN OWNER OF REAL PROPERTY TO SUFFER OR PERMIT TO REMAIN ON SAID PROPERTY A BURNED-OUT STRUCTURE.']
+  },
+  {
+    id:'demolition', label:'Construction – Demolition', desc:'Structure requires demolition order',
+    ipmc:[{code:'110.1'}], ordinances:[{sec:'Sec. 16-3'}],
+    ord_text:['SECTION 16-3. AN OWNER OF REAL PROPERTY WHICH IS THE SITE OF A BURNED-OUT STRUCTURE WHO, WITHIN FIFTEEN (15) DAYS AFTER RECEIPT OF INSURANCE PROCEEDS, FAILS TO RAZE AND REMOVE THE STRUCTURE, OR OBTAIN THE REQUISITE PERMIT TO COMMENCE REPAIRS, COMMITS AN OFFENSE PUNISHABLE BY A FINE OF ONE THOUSAND DOLLARS ($1,000.00).']
+  },
+  {
+    id:'rubbish', label:'Sanitation – Rubbish / Trash', desc:'Trash or debris accumulation in yard',
+    ipmc:[{code:'302.1'}], ordinances:[{sec:'Sec. 16-4'},{sec:'Sec. 16-27'}],
+    ord_text:[
+      'SECTION 16-4. IT SHALL BE UNLAWFUL FOR THE OCCUPANT OF ANY RESIDENCE TO PLACE, PERMIT TO BE PLACED, ALLOW OR COUNTENANCE THE ACCUMULATION OF WASTE IN THE DRIVEWAY OR ALONG THE STREET RIGHT-OF-WAY MORE THAN THIRTY-SIX (36) HOURS PRIOR TO THE NEXT SCHEDULED WASTE COLLECTION DAY.',
+      'SECTION 16-27. ACCUMULATION OF WASTE, REFUSE, TRASH AND OTHER DELETERIOUS SUBSTANCES ON THE PREMISES OF RESIDENCES, COMMERCIAL INSTITUTIONS, OPEN OR VACANT LOTS, AND IN THE STREETS AND ALLEYS SHALL CONSTITUTE A PUBLIC MENACE AND NUISANCE.'
+    ]
+  },
+  {
+    id:'accumulation', label:'Sanitation – Accumulation', desc:'Large buildup of rubbish or garbage',
+    ipmc:[{code:'302.1'},{code:'307.1'}], ordinances:[{sec:'Sec. 16-27'},{sec:'Sec. 16-28'}],
+    ord_text:[
+      'SECTION 16-27. ACCUMULATION OF WASTE, REFUSE, TRASH AND OTHER DELETERIOUS SUBSTANCES ON THE PREMISES OF RESIDENCES, COMMERCIAL INSTITUTIONS, OPEN OR VACANT LOTS, AND IN THE STREETS AND ALLEYS SHALL CONSTITUTE A PUBLIC MENACE AND NUISANCE.',
+      'SECTION 16-28. OWNERS OR PERSONS IN POSSESSION OF ANY LOT OR OTHER REAL PROPERTY SHALL CUT WEEDS, PROPERLY STORE GARBAGE, RUBBISH AND OTHER UNSIGHTLY AND UNSANITARY ARTICLES AND THINGS.'
+    ]
+  },
+  {
+    id:'dead_trees', label:'Vegetation – Dead Trees / Branches', desc:'Dead trees or limbs threatening persons or property',
+    ipmc:[{code:'302.4'}], ordinances:[{sec:'Sec. 16-35'},{sec:'Sec. 16-28'}],
+    ord_text:[
+      'SECTION 16-35. IT SHALL BE UNLAWFUL FOR ANY PERSON HAVING SUPERVISION OR CONTROL OF ANY LOT OR PARCEL OF LAND WITHIN THE CORPORATE LIMITS OF THE CITY TO SUFFER OR PERMIT DEAD TREES AND HANGING DEAD LIMBS DANGEROUS TO THE SAFETY OF PERSONS OR PROPERTY OF ANOTHER.',
+      'SECTION 16-28. OWNERS OR PERSONS IN POSSESSION OF ANY LOT OR OTHER REAL PROPERTY SHALL CUT WEEDS AND DEAD GROWTH, AND PROPERLY STORE OR REMOVE UNSIGHTLY AND UNSANITARY ARTICLES FROM THE PROPERTY.'
+    ]
+  },
+  {
+    id:'overgrown_grass', label:'Vegetation – Overgrown Grass', desc:'Grass or weeds exceeding 10 inches in height',
+    ipmc:[{code:'302.4'}], ordinances:[{sec:'Sec. 16-28'}],
+    ord_text:[
+      'SECTION 16-28. OWNERS OR PERSONS IN POSSESSION OF ANY LOT OR OTHER REAL PROPERTY SHALL CUT WEEDS, PROPERLY STORE GARBAGE, RUBBISH AND OTHER UNSIGHTLY AND UNSANITARY ARTICLES AND THINGS ON PREMISES SHALL CONSTITUTE A PUBLIC MENACE AND NUISANCE.'
+    ]
+  },
+  {
+    id:'abandoned_vehicles', label:'Motor Vehicles – Abandoned', desc:'Abandoned, junk, or inoperable vehicles on property',
+    ipmc:[{code:'302.8'}], ordinances:[{sec:'Sec. 16-53'}],
+    ord_text:[
+      'SECTION 16-53. IT SHALL BE UNLAWFUL FOR ANY PERSON HAVING SUPERVISION OR CONTROL OF ANY LOT OR PARCEL OF LAND WITHIN THE CORPORATE LIMITS OF THE CITY TO SUFFER OR PERMIT THE STORAGE OF A JUNK AND/OR ABANDONED VEHICLE, WHICH IS NOT CONTAINED IN AN ENCLOSED STORAGE BUILDING OR CARPORT, FOR A PERIOD NOT TO EXCEED THIRTY (30) DAYS.'
+    ]
+  }
+];
+
+// ── ARCGIS ────────────────────────────────────────────────────────────────────
+async function loadReports() {
+  var list = document.getElementById('report-list');
+  list.innerHTML = '<div class="sb si"><span class="spinner"></span>Loading reports from ArcGIS Online...</div>';
+  document.getElementById('pop-preview').style.display = 'none';
+  selectedReport = null;
+  allReports = [];
+  try {
+    var resp = await fetch(LAYER_URL + '/query?where=1%3D1&outFields=*&orderByFields=OBJECTID+DESC&resultRecordCount=100&f=json');
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    var data = await resp.json();
+    if (data.error) throw new Error(data.error.message || 'ArcGIS error');
+    if (!data.features || data.features.length === 0) {
+      list.innerHTML = '<div class="sb sw">No reports found in the Requests layer.</div>';
+      return;
+    }
+    allReports = data.features.map(function(f) { return f.attributes; });
+    renderReports(allReports);
+    setStatus('agol-status', '&#10003; ' + allReports.length + ' report(s) loaded.', 'ss');
+  } catch (err) {
+    list.innerHTML = '<div class="sb se">&#10060; <strong>Could not load reports:</strong> ' + err.message + '<br><br>Make sure the layer is shared publicly, then click Refresh.</div>';
+  }
+}
+
+function renderReports(reports) {
+  var list = document.getElementById('report-list');
+  if (!reports.length) { list.innerHTML = '<div class="sb sw">No reports match your search.</div>'; return; }
+  list.innerHTML = '';
+  reports.forEach(function(a) {
+    var rid     = a[F.requestId] || '—';
+    var rtype   = a[F.type] || a[F.category] || 'Unknown Type';
+    var rcat    = a[F.category] || '';
+    var officer = a[F.officer]  || 'Unassigned';
+    var parcel  = a[F.parcel]   || '—';
+    var address = a[F.address]  || '';
+    var rawDate = a[F.date];
+    var dateStr = rawDate ? new Date(rawDate).toLocaleDateString('en-US', {year:'numeric',month:'short',day:'numeric'}) : '—';
+    var row = document.createElement('div');
+    row.className = 'rrow';
+    row.innerHTML =
+      '<div class="rid">ID: ' + rid + '</div>' +
+      '<div><div class="rtitle">' + rtype + (rcat && rcat !== rtype ? ' <span style="font-weight:400;color:#888;">&middot; ' + rcat + '</span>' : '') + '</div>' +
+      '<div class="rsub">' + (address ? address + ' &nbsp;|&nbsp; ' : '') + 'Officer: ' + officer + ' &nbsp;|&nbsp; Parcel: ' + parcel + '</div></div>' +
+      '<div class="rdate">' + dateStr + '</div>';
+    row.addEventListener('click', function() {
+      document.querySelectorAll('.rrow').forEach(function(r) { r.classList.remove('active'); });
+      row.classList.add('active');
+      selectReport(a);
+    });
+    list.appendChild(row);
+  });
+}
+
+function filterReports() {
+  var q = document.getElementById('search-input').value.toLowerCase();
+  if (!q) { renderReports(allReports); return; }
+  renderReports(allReports.filter(function(a) {
+    return Object.values(a).some(function(v) { return v && String(v).toLowerCase().includes(q); });
+  }));
+}
+
+function selectReport(a) {
+  selectedReport = a;
+  var rawDate = a[F.date];
+  var dateStr = rawDate ? new Date(rawDate).toLocaleDateString('en-US', {year:'numeric',month:'long',day:'numeric'}) : '—';
+  var notesVal = [a[F.details], a[F.notes]].filter(Boolean).join(' | ');
+  document.getElementById('pp-rid').textContent     = a[F.requestId] || '—';
+  document.getElementById('pp-ref').textContent     = a[F.refNumber] || '—';
+  document.getElementById('pp-date').textContent    = dateStr;
+  document.getElementById('pp-addr').textContent    = a[F.address]   || '—';
+  document.getElementById('pp-parcel').textContent  = a[F.parcel]    || '—';
+  document.getElementById('pp-lot').textContent     = a[F.lot]       || '—';
+  document.getElementById('pp-officer').textContent = a[F.officer]   || '—';
+  document.getElementById('pp-owner').textContent   = a[F.owner]     || '—';
+  document.getElementById('pp-notes').textContent   = notesVal       || '—';
+  document.getElementById('owner-agol').value       = a[F.owner]     || '';
+  document.getElementById('pop-preview').style.display = 'block';
+}
+
+async function runDiagnostic() {
+  var out = document.getElementById('diag-out');
+  out.innerHTML = '<div class="sb si"><span class="spinner"></span>Querying layer...</div>';
+  try {
+    var resp = await fetch(LAYER_URL + '/query?where=1%3D1&outFields=*&resultRecordCount=1&f=json');
+    var data = await resp.json();
+    if (data.error) throw new Error(JSON.stringify(data.error));
+    if (!data.features || !data.features.length) { out.innerHTML = '<div class="sb sw">Layer reachable but empty.</div>'; return; }
+    var attrs = data.features[0].attributes;
+    var rows = Object.keys(attrs).map(function(k) {
+      return '<tr><td style="padding:2px 12px 2px 0;font-family:monospace;color:#1e40af;">' + k + '</td><td style="color:#444;font-size:11px;">' + JSON.stringify(attrs[k]) + '</td></tr>';
+    }).join('');
+    out.innerHTML = '<div class="sb ss"><strong>Layer connected!</strong><br><br><strong>Field names &amp; sample values:</strong><table style="margin-top:6px;font-size:12px;">' + rows + '</table></div>';
+  } catch(e) {
+    out.innerHTML = '<div class="sb se">Error: ' + e.message + '</div>';
+  }
+}
+
+// ── TAB SWITCHING ─────────────────────────────────────────────────────────────
+function switchTab(tab) {
+  activeTab = tab;
+  document.getElementById('tab-agol').classList.toggle('active', tab === 'agol');
+  document.getElementById('tab-manual').classList.toggle('active', tab === 'manual');
+  document.getElementById('panel-agol').style.display   = tab === 'agol'   ? 'block' : 'none';
+  document.getElementById('panel-manual').style.display = tab === 'manual' ? 'block' : 'none';
+}
+
+// ── FIELDS GETTER ─────────────────────────────────────────────────────────────
+function getFields() {
+  if (activeTab === 'agol' && selectedReport) {
+    var a = selectedReport;
+    var rawDate = a[F.date];
+    var dateVal = rawDate ? new Date(rawDate).toISOString().split('T')[0] : '';
+    return {
+      ownerName:       document.getElementById('owner-agol').value.trim(),
+      propertyAddress: String(a[F.address]   || ''),
+      parcelNumber:    String(a[F.parcel]    || ''),
+      legalDesc:       String(a[F.lot]       || ''),
+      officerName:     String(a[F.officer]   || ''),
+      inspectionDate:  dateVal,
+      notes:           [a[F.details], a[F.notes]].filter(Boolean).join(' | '),
+      requestId:       String(a[F.requestId] || ''),
+      refNumber:       String(a[F.refNumber] || ''),
+      requestType:     String(a[F.type] || a[F.category] || ''),
+    };
+  }
+  return {
+    ownerName:       document.getElementById('m-owner').value.trim(),
+    propertyAddress: document.getElementById('m-address').value.trim(),
+    parcelNumber:    document.getElementById('m-parcel').value.trim(),
+    legalDesc:       document.getElementById('m-legal').value.trim(),
+    officerName:     document.getElementById('m-officer').value.trim(),
+    inspectionDate:  document.getElementById('m-date').value,
+    notes:           document.getElementById('m-notes').value.trim(),
+    requestId:       '',
+    refNumber:       document.getElementById('m-ref').value.trim(),
+    requestType:     '',
+  };
+}
+
+// ── VIOLATION GRID ────────────────────────────────────────────────────────────
+function buildViolationGrid() {
+  var grid = document.getElementById('vgrid');
+  VIOLATIONS.forEach(function(v) {
+    var div = document.createElement('div');
+    div.className = 'vcard';
+    div.id = 'vcard-' + v.id;
+    var ipmcB = v.ipmc.map(function(i) { return '<span class="badge bi">IPMC ' + i.code + '</span>'; }).join('');
+    var ordB  = v.ordinances.map(function(o) { return '<span class="badge bo">' + o.sec + '</span>'; }).join('');
+    div.innerHTML =
+      '<input type="checkbox" id="vchk-' + v.id + '">' +
+      '<div class="vl">' + v.label + '</div>' +
+      '<div class="vc">' + ipmcB + ordB + '</div>' +
+      '<div class="vd">' + v.desc + '</div>';
+    div.addEventListener('click', function(e) {
+      if (e.target.type === 'checkbox') return;
+      toggleV(v.id);
+    });
+    div.querySelector('input').addEventListener('change', function() {
+      document.getElementById('vcard-' + v.id).classList.toggle('selected', this.checked);
+    });
+    grid.appendChild(div);
+  });
+}
+
+function toggleV(id) {
+  var chk  = document.getElementById('vchk-' + id);
+  var card = document.getElementById('vcard-' + id);
+  chk.checked = !chk.checked;
+  card.classList.toggle('selected', chk.checked);
+}
+
+function getSelectedV() {
+  return VIOLATIONS.filter(function(v) { return document.getElementById('vchk-' + v.id).checked; });
+}
+
+// ── HELPERS ───────────────────────────────────────────────────────────────────
+function formatDate(ds) {
+  if (!ds) return '[Date]';
+  return new Date(ds + 'T12:00:00').toLocaleDateString('en-US', {year:'numeric',month:'long',day:'numeric'});
+}
+
+function setStatus(id, msg, cls) {
+  var el = document.getElementById(id);
+  if (el) el.innerHTML = '<div class="sb ' + cls + '">' + msg + '</div>';
+}
+
+// ── PREVIEW TEXT ──────────────────────────────────────────────────────────────
+function buildLetterText(f, violations) {
+  var ipmcCodes = [...new Set(violations.flatMap(function(v) { return v.ipmc.map(function(i) { return i.code; }); }))];
+  var ordSecs   = [...new Set(violations.flatMap(function(v) { return v.ordinances.map(function(o) { return o.sec; }); }))];
+  var ordTexts  = [...new Map(violations.flatMap(function(v) { return v.ord_text.map(function(t) { return [t.substring(0,40), t]; }); })).values()];
+  var L = '';
+  L += 'CODE ENFORCEMENT DEPARTMENT\n';
+  L += '200 E. 8th Avenue, Suite 103  |  Pine Bluff, AR 71601\n';
+  L += '(870) 730-2021   FAX (870) 730-2152\n\n';
+  L += 'GRASS/WEED &/OR JUNK VIOLATION NOTICE\n\n';
+  L += 'DATE: ' + formatDate(f.inspectionDate);
+  if (f.refNumber) L += '                    ' + f.refNumber;
+  L += '\n\nProperty Violation Location: ' + (f.propertyAddress || '[Address]') + '\n';
+  L += 'INSPECTOR: ' + (f.officerName || '[Inspector]') + '\n\n';
+  L += (f.ownerName || '[OWNER NAME]') + '\n\n';
+  L += 'Parcel:   ' + (f.parcelNumber || '—') + '\n';
+  L += 'Legal:    ' + (f.legalDesc    || '—') + '\n\n';
+  L += 'Dear ' + (f.ownerName || '[Owner Name]') + ',\n';
+  L += 'After an inspection by an official of this Department, the above referenced property has been found to be in violation of SECTIONS ' + ipmcCodes.join(' and ') + ' of the International Property Maintenance Code and SECTIONS ' + ordSecs.join(' & ') + ' of the CITY OF PINE BLUFF, which states in part:\n\n';
+  ordTexts.forEach(function(t) { L += t + '\n\n'; });
+  L += '**No further notice, warning or grace period will be given for any repeat violation of the same subsection of this section within the remainder of the calendar year.**\n\n';
+  L += 'This is your official notice to have the property cleared of all violations within 7 days from the receipt of this notice.\n\n';
+  L += 'If you fail, neglect, or refuse to comply with this notice, you will be subject to a fine for each offense. Each day during which an offense occurs or continues is a separate offense. In addition, if the City of Pine Bluff has to clean up or clear the property for you, you will be charged for all costs incurred by the City, and the shall have a lien against the property for the amount. This violation will lead to a citation being served to appear in District Court to face fines and other penalties.\n\n';
+  L += 'If you do not currently own this property, contact our office immediately to prevent legal action against you as the apparent owner.\n\n';
+  L += 'If you have any questions or wish to discuss this matter further, contact our office at (870) 730-2021, 200 E. 8th Pine Bluff, AR.\n\n';
+  L += 'Respectfully,\n\n\n' + (f.officerName || '______________________________');
+  return L;
+}
+
+function updatePreview() {
+  var v = getSelectedV();
+  if (!v.length) { setStatus('gen-status', '&#10060; Please select at least one violation to preview.', 'se'); return; }
+  document.getElementById('preview-content').textContent = buildLetterText(getFields(), v);
+  document.getElementById('preview-area').style.display = 'block';
+}
+
+// ── DOCX BUILDER ─────────────────────────────────────────────────────────────
+function xe(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function wp(runs, o) {
+  o = o || {};
+  var pp = [];
+  if (o.center)  pp.push('<w:jc w:val="center"/>');
+  if (o.justify) pp.push('<w:jc w:val="both"/>');
+  var sp = [];
+  if (o.before !== undefined) sp.push('w:before="' + o.before + '"');
+  if (o.after  !== undefined) sp.push('w:after="'  + o.after  + '"');
+  if (sp.length) pp.push('<w:spacing ' + sp.join(' ') + '/>');
+  if (o.indent)  pp.push('<w:ind w:left="' + o.indent + '" w:right="' + o.indent + '"/>');
+  if (o.lborder) pp.push('<w:pBdr><w:left w:val="single" w:sz="18" w:space="10" w:color="444444"/></w:pBdr>');
+  var pPr = pp.length ? '<w:pPr>' + pp.join('') + '</w:pPr>' : '';
+  var rs = runs.map(function(r) {
+    var rp = ['<w:rFonts w:ascii="Times New Roman" w:hAnsi="Times New Roman"/>'];
+    if (r.b)  rp.push('<w:b/><w:bCs/>');
+    if (r.i)  rp.push('<w:i/><w:iCs/>');
+    if (r.sz) rp.push('<w:sz w:val="' + (r.sz * 2) + '"/><w:szCs w:val="' + (r.sz * 2) + '"/>');
+    var preserve = (r.t || '').match(/^ | $/) ? ' xml:space="preserve"' : '';
+    return '<w:r><w:rPr>' + rp.join('') + '</w:rPr><w:t' + preserve + '>' + xe(r.t || '') + '</w:t></w:r>';
+  }).join('');
+  return '<w:p>' + pPr + rs + '</w:p>';
+}
+
+function B(t, sz)  { return {t:t, b:true,  sz:sz||12}; }
+function N(t, sz)  { return {t:t,           sz:sz||12}; }
+function BI(t, sz) { return {t:t, b:true, i:true, sz:sz||12}; }
+
+function buildDocXml(f, violations) {
+  var ipmcCodes = [...new Set(violations.flatMap(function(v) { return v.ipmc.map(function(i) { return i.code; }); }))];
+  var ordSecs   = [...new Set(violations.flatMap(function(v) { return v.ordinances.map(function(o) { return o.sec; }); }))];
+  var ordTexts  = [...new Map(violations.flatMap(function(v) { return v.ord_text.map(function(t) { return [t.substring(0,40), t]; }); })).values()];
+  var ps = [];
+
+  // HEADER
+  ps.push(wp([B('CODE ENFORCEMENT DEPARTMENT', 16)], {center:true, after:40}));
+  ps.push(wp([N('200 E. 8th Avenue, Suite 103', 11)], {center:true, after:0}));
+  ps.push(wp([N('Pine Bluff, AR 71601', 11)], {center:true, after:0}));
+  ps.push(wp([N('(870) 730-2021     FAX (870) 730-2152', 11)], {center:true, after:160}));
+
+  // TITLE
+  ps.push(wp([B('GRASS/WEED &/OR JUNK VIOLATION NOTICE', 14)], {center:true, after:200}));
+
+  // DATE + REFERENCE NUMBER (right-aligned ref on same line via tab)
+  var dateRuns = [B('DATE: ', 12), N(formatDate(f.inspectionDate), 12)];
+  if (f.refNumber) {
+    dateRuns.push(N('          ', 12));
+    dateRuns.push(N(f.refNumber, 12));
+  }
+  ps.push(wp(dateRuns, {after:80}));
+
+  // LOCATION + INSPECTOR
+  ps.push(wp([B('Property Violation Location: ', 12), N(f.propertyAddress || '', 12)], {after:0}));
+  ps.push(wp([B('INSPECTOR: ', 12), N(f.officerName || '', 12)], {after:160}));
+
+  // OWNER NAME
+  ps.push(wp([B(f.ownerName || '[OWNER NAME]', 12)], {after:160}));
+
+  // PARCEL + LEGAL
+  ps.push(wp([B('Parcel:\t', 12), N(f.parcelNumber || '', 12)], {after:40}));
+  ps.push(wp([B('Legal:\t',  12), N(f.legalDesc    || '', 12)], {after:200}));
+
+  // SALUTATION
+  ps.push(wp([N('Dear ' + (f.ownerName || '[Owner Name]') + ',', 12)], {after:80}));
+
+  // OPENING PARAGRAPH
+  ps.push(wp([
+    N('After an inspection by an official of this Department, the above referenced property has been found to be in violation of ', 12),
+    B('SECTIONS ' + ipmcCodes.join(' and '), 12),
+    N(' of the International Property Maintenance Code and ', 12),
+    B('SECTIONS ' + ordSecs.join(' & '), 12),
+    N(' of the CITY OF PINE BLUFF, which states in part:', 12),
+  ], {justify:true, after:160}));
+
+  // ORDINANCE SECTIONS
+  ordTexts.forEach(function(text) {
+    ps.push(wp([B(text, 12)], {lborder:true, indent:300, before:80, after:80}));
+  });
+
+  ps.push(wp([N('', 12)], {after:80}));
+
+  // BOILERPLATE
+  ps.push(wp([BI('**No further notice, warning or grace period will be given for any repeat violation of the same subsection of this section within the remainder of the calendar year.**', 12)], {justify:true, after:120}));
+  ps.push(wp([N('This is your official notice to have the property cleared of all violations within 7 days from the receipt of this notice.', 12)], {justify:true, after:120}));
+  ps.push(wp([
+    N('If you fail, neglect, or refuse to comply with this notice, you will be subject to a fine for each offense. Each day during which an offense occurs or continues is a separate offense. In addition, if the City of Pine Bluff has to clean up or clear the property for you, you will be charged for all costs incurred by the City, and the shall have a lien against the property for the amount. ', 12),
+    B('This violation will lead to a citation being served to appear in District Court to face fines and other penalties.', 12)
+  ], {justify:true, after:120}));
+  ps.push(wp([N('If you do not currently own this property, contact our office immediately to prevent legal action against you as the apparent owner.', 12)], {justify:true, after:120}));
+  ps.push(wp([N('If you have any questions or wish to discuss this matter further, contact our office at (870) 730-2021, 200 E. 8th Pine Bluff, AR.', 12)], {justify:true, after:240}));
+
+  // SIGNATURE
+  ps.push(wp([N('Respectfully,', 12)], {after:600}));
+  ps.push(wp([N(f.officerName || '', 12)]));
+
+  return '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+    '<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body>' +
+    ps.join('') +
+    '<w:sectPr><w:pgSz w:w="12240" w:h="15840"/><w:pgMar w:top="1080" w:right="1260" w:bottom="1080" w:left="1260"/></w:sectPr>' +
+    '</w:body></w:document>';
+}
+
+// ── ZIP BUILDER ───────────────────────────────────────────────────────────────
+function crc32(d) {
+  var c = 0xFFFFFFFF;
+  for (var i = 0; i < d.length; i++) { c ^= d[i]; for (var j = 0; j < 8; j++) c = (c&1) ? (0xEDB88320^(c>>>1)) : (c>>>1); }
+  return (c ^ 0xFFFFFFFF) >>> 0;
+}
+function u16(v) { return [v&0xff,(v>>8)&0xff]; }
+function u32(v) { return [v&0xff,(v>>8)&0xff,(v>>16)&0xff,(v>>24)&0xff]; }
+function cat(arrays) {
+  var t = arrays.reduce(function(s,a){return s+a.length;},0);
+  var o = new Uint8Array(t); var p = 0;
+  arrays.forEach(function(a){o.set(a,p);p+=a.length;});
+  return o;
+}
+function buildZip(files) {
+  var enc = new TextEncoder();
+  var lp = [], cd = [], offset = 0;
+  files.forEach(function(f) {
+    var data = typeof f.content === 'string' ? enc.encode(f.content) : f.content;
+    var name = enc.encode(f.name);
+    var crc = crc32(data), sz = data.length;
+    var lh = new Uint8Array([0x50,0x4b,0x03,0x04,20,0,0,0,0,0,0,0,0,0].concat(u32(crc)).concat(u32(sz)).concat(u32(sz)).concat(u16(name.length)).concat([0,0]));
+    lp.push(lh, name, data);
+    var ce = new Uint8Array([0x50,0x4b,0x01,0x02,20,0,20,0,0,0,0,0,0,0,0,0].concat(u32(crc)).concat(u32(sz)).concat(u32(sz)).concat(u16(name.length)).concat([0,0,0,0,0,0,0,0,0,0,0,0]).concat(u32(offset)));
+    cd.push(ce, name);
+    offset += lh.length + name.length + sz;
+  });
+  var cdData = cat(cd);
+  var eocd = new Uint8Array([0x50,0x4b,0x05,0x06,0,0,0,0].concat(u16(files.length)).concat(u16(files.length)).concat(u32(cdData.length)).concat(u32(offset)).concat([0,0]));
+  return cat(lp.concat([cdData, eocd]));
+}
+
+// ── GENERATE ──────────────────────────────────────────────────────────────────
+function generateDocument() {
+  var f = getFields();
+  var v = getSelectedV();
+  if (activeTab === 'agol' && !selectedReport) { setStatus('gen-status','&#10060; Please select a report from the list above.','se'); return; }
+  if (!f.ownerName) { setStatus('gen-status','&#10060; Please enter the Owner / Responsible Party Name.','se'); return; }
+  if (!v.length)    { setStatus('gen-status','&#10060; Please select at least one violation.','se'); return; }
+
+  setStatus('gen-status','&#9203; Building document...','si');
+  document.getElementById('gen-btn').disabled = true;
+
+  try {
+    var docXml = buildDocXml(f, v);
+    var files = [
+      {name:'[Content_Types].xml', content:'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/></Types>'},
+      {name:'_rels/.rels',         content:'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>'},
+      {name:'word/_rels/document.xml.rels', content:'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"></Relationships>'},
+      {name:'word/document.xml', content:docXml}
+    ];
+    var zip  = buildZip(files);
+    var blob = new Blob([zip], {type:'application/vnd.openxmlformats-officedocument.wordprocessingml.document'});
+    var url  = URL.createObjectURL(blob);
+    var a    = document.createElement('a');
+    var par  = (f.parcelNumber || 'notice').replace(/[^a-zA-Z0-9]/g,'_').substring(0,20);
+    var ref  = f.refNumber ? '_' + f.refNumber.replace(/[^a-zA-Z0-9]/g,'_') : '';
+    a.href     = url;
+    a.download = 'ViolationNotice' + ref + '_' + par + '_' + (f.inspectionDate || 'undated') + '.docx';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    setStatus('gen-status','&#10003; Document generated and downloaded successfully!','ss');
+  } catch(e) {
+    setStatus('gen-status','&#10060; Error: ' + e.message,'se');
+    console.error(e);
+  }
+  document.getElementById('gen-btn').disabled = false;
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+buildViolationGrid();
+document.getElementById('m-date').value = new Date().toISOString().split('T')[0];
+loadReports();
+</script>
+</body>
+</html>
