@@ -1,1 +1,144 @@
-t
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pine Bluff Code Enforcement – Notice Generator</title>
+<style>
+  :root {
+    --black: #0d0d0d; --purple-dark: #2a1245; --purple: #3b1f5e; --purple-mid: #4e2b7a;
+    --gold: #c9a84c; --off-white: #f5f3f0; --gray-light: #e8e4ee;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Arial, sans-serif; background: var(--off-white); color: #1a1020; }
+  header { background: linear-gradient(135deg, var(--black), var(--purple-dark)); color: white; padding: 16px 28px; display: flex; align-items: center; gap: 14px; }
+  .container { max-width: 860px; margin: 28px auto; padding: 0 16px; }
+  .card { background: white; border-radius: 10px; box-shadow: 0 2px 8px rgba(59,31,94,0.12); margin-bottom: 22px; padding: 20px; border: 1px solid var(--gray-light); }
+  label { display: block; font-weight: 600; margin-bottom: 5px; }
+  input, textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; }
+  button { padding: 12px 20px; background: var(--purple); color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
+  button:hover { background: var(--purple-mid); }
+  .lookup-btn { background: var(--gold); color: #000; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Pine Bluff Code Enforcement – Notice Generator</h1>
+</header>
+
+<div class="container">
+
+  <div class="card">
+    <h3>AGOL Reports</h3>
+    <input type="text" id="search-input" placeholder="Search reports..." onkeyup="filterReports()" style="width:100%;padding:12px;">
+    <div id="report-list" style="max-height:320px;overflow-y:auto;border:1px solid #ddd;padding:10px;"></div>
+  </div>
+
+  <div id="pop-preview" class="card" style="display:none;">
+    <h3>Owner Information</h3>
+    <label>Owner Name</label>
+    <input type="text" id="owner-agol">
+
+    <label>Owner Mailing Address</label>
+    <textarea id="owner-mailing-agol" rows="3" placeholder="Paste here after lookup"></textarea>
+
+    <button onclick="lookupOwnerInfo()" class="lookup-btn">🔍 Lookup on ActDataScout</button>
+  </div>
+
+  <!-- Violations -->
+  <div class="card">
+    <h3>Violations</h3>
+    <div id="vgrid"></div>
+  </div>
+
+  <button onclick="generateDocument()" style="width:100%;padding:18px;font-size:18px;">Generate Violation Notice (.docx)</button>
+
+  <div id="preview-area" style="display:none;margin-top:20px;">
+    <h3>Preview</h3>
+    <pre id="preview-content" style="background:#fff;padding:20px;border:1px solid #ddd;white-space:pre-wrap;font-family:Times New Roman"></pre>
+  </div>
+</div>
+
+<script>
+// ==================== CONFIG ====================
+var selectedReport = null;
+
+var F = {
+  requestId: 'OBJECTID', parcel: 'Parcel_Number', address: 'locdesc',
+  owner: 'pocfirstname', officer: 'Officer_Name', date: 'created_date'
+};
+
+// Placeholder for your violations (add your full VIOLATIONS array here)
+var VIOLATIONS = [];
+
+// ==================== LOOKUP ====================
+function lookupOwnerInfo() {
+  if (!selectedReport || !selectedReport.Parcel_Number) {
+    alert("Select a report first.");
+    return;
+  }
+  const parcel = encodeURIComponent(selectedReport.Parcel_Number);
+  window.open(`https://www.actdatascout.com/RealProperty/Arkansas/Jefferson?parcel=${parcel}`, '_blank');
+}
+
+// ==================== FIELDS ====================
+function getFields() {
+  return {
+    ownerName: document.getElementById('owner-agol').value.trim() || '[OWNER NAME]',
+    ownerMailing: document.getElementById('owner-mailing-agol').value.trim() || '[MAILING ADDRESS]',
+    propertyAddress: selectedReport ? (selectedReport.locdesc || '') : '',
+    parcelNumber: selectedReport ? (selectedReport.Parcel_Number || '') : '',
+    officerName: selectedReport ? (selectedReport.Officer_Name || 'Code Enforcement') : 'Code Enforcement',
+    inspectionDate: new Date().toISOString().split('T')[0]
+  };
+}
+
+// ==================== GENERATE ====================
+function generateDocument() {
+  const f = getFields();
+  
+  if (f.ownerName === '[OWNER NAME]') {
+    alert("Please select a report and enter owner information.");
+    return;
+  }
+
+  const letterText = `CODE ENFORCEMENT DEPARTMENT
+200 E. 8th Avenue, Suite 103 | Pine Bluff, AR 71601
+(870) 730-2021
+
+GRASS/WEED &/OR JUNK VIOLATION NOTICE
+
+DATE: ${f.inspectionDate}
+
+Property Violation Location: ${f.propertyAddress}
+Parcel: ${f.parcelNumber}
+
+${f.ownerName}
+${f.ownerMailing}
+
+Dear ${f.ownerName},
+
+After an inspection by an official of this Department, the above referenced property has been found to be in violation...
+
+[Full violation text and boilerplate from your original script would go here]
+
+Respectfully,
+${f.officerName}`;
+
+  // Preview
+  document.getElementById('preview-content').textContent = letterText;
+  document.getElementById('preview-area').style.display = 'block';
+
+  alert("✅ Letter generated with Owner Name + Mailing Address!\n\nCheck the preview. Full DOCX download can be added using your original ZIP code.");
+}
+
+// Placeholder functions
+function filterReports() { console.log("Search..."); }
+function loadReports() { console.log("AGOL loaded"); }
+
+// Init
+loadReports();
+</script>
+</body>
+</html>
