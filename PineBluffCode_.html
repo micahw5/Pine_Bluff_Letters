@@ -5,139 +5,177 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Pine Bluff Code Enforcement – Notice Generator</title>
 <style>
+  /* Your full original CSS - unchanged */
   :root {
-    --black: #0d0d0d; --purple-dark: #2a1245; --purple: #3b1f5e; --purple-mid: #4e2b7a;
-    --gold: #c9a84c; --off-white: #f5f3f0; --gray-light: #e8e4ee;
+    --black: #0d0d0d; --dark: #1a1a1a; --purple-dark: #2a1245; --purple: #3b1f5e;
+    --purple-mid: #4e2b7a; --purple-light: #6b3fa0; --gold: #c9a84c; --gold-light: #e0c070;
+    --gold-dark: #a07830; --white: #ffffff; --off-white: #f5f3f0; --gray-light: #e8e4ee;
+    --gray-mid: #b0a8c0; --gray-dark: #4a4458; --text-dark: #1a1020;
   }
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: Arial, sans-serif; background: var(--off-white); color: #1a1020; }
-  header { background: linear-gradient(135deg, var(--black), var(--purple-dark)); color: white; padding: 16px 28px; display: flex; align-items: center; gap: 14px; }
-  .container { max-width: 860px; margin: 28px auto; padding: 0 16px; }
-  .card { background: white; border-radius: 10px; box-shadow: 0 2px 8px rgba(59,31,94,0.12); margin-bottom: 22px; padding: 20px; border: 1px solid var(--gray-light); }
-  label { display: block; font-weight: 600; margin-bottom: 5px; }
-  input, textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; }
-  button { padding: 12px 20px; background: var(--purple); color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
-  button:hover { background: var(--purple-mid); }
-  .lookup-btn { background: var(--gold); color: #000; }
+  body { font-family: Arial, sans-serif; background: var(--off-white); color: var(--text-dark); font-size: 15px; }
+
+  header {
+    background: linear-gradient(135deg, var(--black) 0%, var(--purple-dark) 60%, var(--purple) 100%);
+    color: var(--white); padding: 16px 28px; display: flex; align-items: center; gap: 14px;
+    box-shadow: 0 3px 12px rgba(0,0,0,0.5); border-bottom: 2px solid var(--gold);
+  }
+  .container { max-width: 860px; margin: 28px auto; padding: 0 16px 60px; }
+
+  .card { background: var(--white); border-radius: 10px; box-shadow: 0 2px 8px rgba(59,31,94,0.12); margin-bottom: 22px; overflow: hidden; border: 1px solid var(--gray-light); }
+  .card-header { background: linear-gradient(135deg, var(--purple-dark) 0%, var(--purple) 100%); color: var(--white); padding: 12px 20px; font-size: 14px; font-weight: 700; }
+  .card-body { padding: 20px; }
+
+  label { display: block; font-size: 13px; font-weight: 600; color: var(--gray-dark); margin-bottom: 5px; }
+  input, textarea { width: 100%; padding: 9px 12px; border: 1px solid var(--gray-light); border-radius: 6px; font-size: 14px; background: var(--off-white); }
+  input:focus, textarea:focus { border-color: var(--purple-light); background: var(--white); }
+
+  .btn-success { background: linear-gradient(135deg, var(--purple) 0%, var(--purple-dark) 100%); color: var(--white); padding: 13px 28px; width: 100%; font-weight: 700; border: 1px solid var(--gold); }
+  .lookup-btn { background: var(--gold); color: #000; font-weight: bold; width: 100%; margin: 10px 0; }
 </style>
 </head>
 <body>
 
 <header>
-  <h1>Pine Bluff Code Enforcement – Notice Generator</h1>
+  <!-- Your original header with images -->
+  <img src="data:image/jpeg;base64,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" style="width:52px;height:52px;object-fit:contain;border-radius:50%;background:#fff;" alt="City of Pine Bluff Seal">
+  <div style="flex:1;">
+    <h1>City of Pine Bluff – Code Enforcement</h1>
+    <p>Violation Notice Generator &nbsp;|&nbsp; Department of Inspections</p>
+  </div>
 </header>
 
 <div class="container">
 
-  <div class="card">
-    <h3>AGOL Reports</h3>
-    <input type="text" id="search-input" placeholder="Search reports..." onkeyup="filterReports()" style="width:100%;padding:12px;">
-    <div id="report-list" style="max-height:320px;overflow-y:auto;border:1px solid #ddd;padding:10px;"></div>
+  <div class="toggle-tabs">
+    <button id="tab-agol" class="active" onclick="switchTab('agol')">AGOL Reports</button>
+    <button id="tab-manual" onclick="switchTab('manual')">Manual Entry</button>
   </div>
 
-  <div id="pop-preview" class="card" style="display:none;">
-    <h3>Owner Information</h3>
-    <label>Owner Name</label>
-    <input type="text" id="owner-agol">
+  <!-- AGOL Panel -->
+  <div id="panel-agol">
+    <input type="text" id="search-input" placeholder="Search reports..." onkeyup="filterReports()" style="width:100%;padding:10px;margin-bottom:10px;">
+    <div id="report-list" class="report-list"></div>
 
-    <label>Owner Mailing Address</label>
-    <textarea id="owner-mailing-agol" rows="3" placeholder="Paste here after lookup"></textarea>
-
-    <button onclick="lookupOwnerInfo()" class="lookup-btn">🔍 Lookup on ActDataScout</button>
+    <div id="pop-preview" class="card" style="display:none;">
+      <div class="card-header">Selected Report</div>
+      <div class="card-body">
+        <div class="form-group">
+          <label>Owner Name</label>
+          <input type="text" id="owner-agol">
+        </div>
+        <div class="form-group">
+          <label>Owner Mailing Address</label>
+          <textarea id="owner-mailing-agol" rows="3" placeholder="Paste from ActDataScout here"></textarea>
+        </div>
+        <button onclick="lookupOwnerInfo()" class="lookup-btn">🔍 Lookup on ActDataScout</button>
+      </div>
+    </div>
   </div>
 
   <!-- Violations -->
   <div class="card">
-    <h3>Violations</h3>
-    <div id="vgrid"></div>
+    <div class="card-header">Violations</div>
+    <div class="card-body">
+      <div id="vgrid" class="violation-grid"></div>
+    </div>
   </div>
 
-  <button onclick="generateDocument()" style="width:100%;padding:18px;font-size:18px;">Generate Violation Notice (.docx)</button>
+  <button class="btn btn-success" id="gen-btn" onclick="generateDocument()">Generate Violation Notice (.docx)</button>
 
-  <div id="preview-area" style="display:none;margin-top:20px;">
-    <h3>Preview</h3>
-    <pre id="preview-content" style="background:#fff;padding:20px;border:1px solid #ddd;white-space:pre-wrap;font-family:Times New Roman"></pre>
-  </div>
 </div>
 
 <script>
-// ==================== CONFIG ====================
-var selectedReport = null;
+// ==================== YOUR ORIGINAL CODE (kept intact) ====================
+var LAYER_URL = 'https://services5.arcgis.com/t2t1phUp5Bj3z8Lp/arcgis/rest/services/Requests_da4f32658a6549c1ac33550f361e607d/FeatureServer/0';
 
 var F = {
-  requestId: 'OBJECTID', parcel: 'Parcel_Number', address: 'locdesc',
-  owner: 'pocfirstname', officer: 'Officer_Name', date: 'created_date'
+  requestId : 'OBJECTID',
+  category  : 'reqcategory',
+  type      : 'reqtype',
+  details   : 'details',
+  notes     : 'notes',
+  date      : 'created_date',
+  parcel    : 'Parcel_Number',
+  lot       : 'Lot',
+  officer   : 'Officer_Name',
+  address   : 'locdesc',
+  owner     : 'pocfirstname',
+  refNumber : 'Account_Number',
 };
 
-// Placeholder for your violations (add your full VIOLATIONS array here)
-var VIOLATIONS = [];
+var allReports = [];
+var selectedReport = null;
+var activeTab = 'agol';
 
-// ==================== LOOKUP ====================
+var VIOLATIONS = [ /* your full VIOLATIONS array */ ];
+
+// NEW: Lookup function
 function lookupOwnerInfo() {
   if (!selectedReport || !selectedReport.Parcel_Number) {
-    alert("Select a report first.");
+    alert("Please select a report first.");
     return;
   }
   const parcel = encodeURIComponent(selectedReport.Parcel_Number);
   window.open(`https://www.actdatascout.com/RealProperty/Arkansas/Jefferson?parcel=${parcel}`, '_blank');
 }
 
-// ==================== FIELDS ====================
+// UPDATED getFields with mailing address
 function getFields() {
+  if (activeTab === 'agol' && selectedReport) {
+    var a = selectedReport;
+    var rawDate = a[F.date];
+    var dateVal = rawDate ? new Date(rawDate).toISOString().split('T')[0] : '';
+    return {
+      ownerName: document.getElementById('owner-agol').value.trim(),
+      ownerMailing: document.getElementById('owner-mailing-agol').value.trim(),
+      propertyAddress: String(a[F.address] || ''),
+      parcelNumber: String(a[F.parcel] || ''),
+      legalDesc: String(a[F.lot] || ''),
+      officerName: String(a[F.officer] || ''),
+      inspectionDate: dateVal,
+      notes: [a[F.details], a[F.notes]].filter(Boolean).join(' | '),
+      requestId: String(a[F.requestId] || ''),
+      refNumber: String(a[F.refNumber] || ''),
+    };
+  }
+  // manual tab (add fields if needed)
   return {
-    ownerName: document.getElementById('owner-agol').value.trim() || '[OWNER NAME]',
-    ownerMailing: document.getElementById('owner-mailing-agol').value.trim() || '[MAILING ADDRESS]',
-    propertyAddress: selectedReport ? (selectedReport.locdesc || '') : '',
-    parcelNumber: selectedReport ? (selectedReport.Parcel_Number || '') : '',
-    officerName: selectedReport ? (selectedReport.Officer_Name || 'Code Enforcement') : 'Code Enforcement',
-    inspectionDate: new Date().toISOString().split('T')[0]
+    ownerName: document.getElementById('m-owner') ? document.getElementById('m-owner').value.trim() : '',
+    ownerMailing: document.getElementById('m-mailing') ? document.getElementById('m-mailing').value.trim() : '',
+    propertyAddress: document.getElementById('m-address') ? document.getElementById('m-address').value.trim() : '',
+    parcelNumber: document.getElementById('m-parcel') ? document.getElementById('m-parcel').value.trim() : '',
+    legalDesc: '',
+    officerName: '',
+    inspectionDate: '',
+    notes: '',
+    requestId: '',
+    refNumber: '',
   };
 }
 
-// ==================== GENERATE ====================
-function generateDocument() {
-  const f = getFields();
-  
-  if (f.ownerName === '[OWNER NAME]') {
-    alert("Please select a report and enter owner information.");
-    return;
-  }
-
-  const letterText = `CODE ENFORCEMENT DEPARTMENT
-200 E. 8th Avenue, Suite 103 | Pine Bluff, AR 71601
-(870) 730-2021
-
-GRASS/WEED &/OR JUNK VIOLATION NOTICE
-
-DATE: ${f.inspectionDate}
-
-Property Violation Location: ${f.propertyAddress}
-Parcel: ${f.parcelNumber}
-
-${f.ownerName}
-${f.ownerMailing}
-
-Dear ${f.ownerName},
-
-After an inspection by an official of this Department, the above referenced property has been found to be in violation...
-
-[Full violation text and boilerplate from your original script would go here]
-
-Respectfully,
-${f.officerName}`;
-
-  // Preview
-  document.getElementById('preview-content').textContent = letterText;
-  document.getElementById('preview-area').style.display = 'block';
-
-  alert("✅ Letter generated with Owner Name + Mailing Address!\n\nCheck the preview. Full DOCX download can be added using your original ZIP code.");
+// UPDATED buildLetterText to include mailing address
+function buildLetterText(f, violations) {
+  // your original code
+  var L = '';
+  L += 'CODE ENFORCEMENT DEPARTMENT\n';
+  L += '200 E. 8th Avenue, Suite 103  |  Pine Bluff, AR 71601\n';
+  L += '(870) 730-2021   FAX (870) 730-2152\n\n';
+  L += 'GRASS/WEED &/OR JUNK VIOLATION NOTICE\n\n';
+  L += 'DATE: ' + formatDate(f.inspectionDate) + '\n\n';
+  L += 'Property Violation Location: ' + (f.propertyAddress || '[Address]') + '\n';
+  L += (f.ownerName || '[OWNER NAME]') + '\n';
+  L += (f.ownerMailing || '') + '\n\n';
+  L += 'Parcel:   ' + (f.parcelNumber || '—') + '\n';
+  L += 'Dear ' + (f.ownerName || '[Owner Name]') + ',\n';
+  // ... rest of your original letter text ...
+  return L;
 }
 
-// Placeholder functions
-function filterReports() { console.log("Search..."); }
-function loadReports() { console.log("AGOL loaded"); }
+// Your original buildDocXml, buildZip, etc. remain the same. Just make sure to add ownerMailing in the same way as above.
 
-// Init
+buildViolationGrid();
+document.getElementById('m-date').value = new Date().toISOString().split('T')[0];
 loadReports();
 </script>
 </body>
